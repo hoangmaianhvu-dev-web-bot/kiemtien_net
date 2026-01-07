@@ -21,14 +21,23 @@ const Login: React.FC<LoginProps> = () => {
     setLoading(true);
     setError('');
 
+    // Nếu người dùng nhập số điện thoại admin (0337117930) mà không phải định dạng email,
+    // ta có thể tự động chuyển thành email giả định nếu database yêu cầu email,
+    // hoặc giữ nguyên nếu Supabase được cấu hình đăng nhập bằng phone/username.
+    // Ở đây ta giả định hệ thống dùng Email, nên nếu nhập số thì có thể yêu cầu email thực.
+    let loginIdentifier = email;
+    if (!email.includes('@') && email === '0337117930') {
+      // Trường hợp đặc biệt cho admin nếu dùng account giả định
+      loginIdentifier = 'admin@linkgold.pro';
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginIdentifier,
         password,
       });
 
       if (error) throw error;
-      // App.tsx handles the state update via onAuthStateChange
     } catch (err: any) {
       setError(err.message || 'Lỗi đăng nhập. Vui lòng kiểm tra lại.');
       setLoading(false);
@@ -90,10 +99,10 @@ const Login: React.FC<LoginProps> = () => {
               {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl font-bold">{error}</div>}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Email</label>
+                  <label className="text-sm font-bold text-slate-700 ml-1">Email hoặc Số điện thoại</label>
                   <div className="relative">
                     <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-medium" placeholder="example@gmail.com" required />
+                    <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-medium" placeholder="example@gmail.com hoặc 0337..." required />
                   </div>
                 </div>
                 <div className="space-y-2">

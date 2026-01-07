@@ -17,21 +17,29 @@ import { supabase } from './supabase';
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        fetchProfile(session.user.id);
-      } else {
+    const initApp = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (session) {
+          await fetchProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('Initial session check failed:', err);
+        setError('Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại cấu hình Supabase của bạn.');
         setLoading(false);
       }
     };
 
-    checkSession();
+    initApp();
 
-    // Listen for changes on auth state (sign in, sign out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         fetchProfile(session.user.id);
@@ -46,18 +54,28 @@ const App: React.FC = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+      
       if (data) {
-        setUser(data as UserProfile);
+        const profile = data as UserProfile;
+        // Kiểm tra ID Admin đặc biệt
+        if (profile.username === '0337117930' || profile.id === '0337117930') {
+          profile.role = UserRole.ADMIN;
+        }
+        setUser(profile);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching profile:', err);
+      // If error is 401/403, key is likely invalid
+      if (err.code === '401' || err.status === 401) {
+        setError('Thông tin xác thực Supabase đã hết hạn hoặc không hợp lệ (Key bị Revoke).');
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +91,29 @@ const App: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center">
            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0095FF]"></div>
-           <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-xs">Đang kết nối LinkGold...</p>
+           <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Đang khởi tạo hệ thống...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-xl text-center border border-red-100">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i className="fa-solid fa-triangle-exclamation text-3xl"></i>
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-4">Lỗi Kết Nối</h2>
+          <p className="text-slate-500 mb-8 leading-relaxed font-medium">
+            {error}
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full bg-[#0095FF] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#0077CC] transition-all"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );
