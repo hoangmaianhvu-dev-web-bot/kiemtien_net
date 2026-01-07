@@ -22,7 +22,6 @@ const App: React.FC = () => {
     const initApp = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
         if (sessionError) throw sessionError;
 
         if (session) {
@@ -53,22 +52,8 @@ const App: React.FC = () => {
   const handleGlobalError = (err: any, context: string) => {
     console.error(`${context}:`, err);
     let msg = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
-    
-    if (typeof err === 'string') {
-      msg = err;
-    } else if (err && typeof err === 'object') {
-      // Ưu tiên trích xuất thông điệp dễ đọc
-      msg = err.message || err.error_description || err.error || (err.toString && err.toString() !== '[object Object]' ? err.toString() : JSON.stringify(err));
-    }
-
-    if (msg.includes('Failed to fetch') || msg.includes('network')) {
-      setError('Mất kết nối Internet. Vui lòng kiểm tra lại đường truyền của bạn.');
-    } else if (msg.includes('JWT') || msg.includes('session')) {
-      setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      handleLogout();
-    } else {
-      setError(`${context}: ${msg}`);
-    }
+    if (err?.message) msg = err.message;
+    setError(msg);
   };
 
   const fetchProfile = async (userId: string, email?: string) => {
@@ -81,9 +66,10 @@ const App: React.FC = () => {
 
       if (profileError) throw profileError;
 
+      let profileData: UserProfile;
+
       if (!data) {
         const username = email ? email.split('@')[0] : 'User_' + userId.slice(0, 5);
-        
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
@@ -96,14 +82,19 @@ const App: React.FC = () => {
           .single();
 
         if (createError) throw createError;
-        setUser(newProfile as UserProfile);
+        profileData = newProfile as UserProfile;
       } else {
-        const profile = data as UserProfile;
-        if (profile.username === '0337117930' || profile.id === '0337117930') {
-          profile.role = UserRole.ADMIN;
-        }
-        setUser(profile);
+        profileData = data as UserProfile;
       }
+
+      // CHỈ ĐỊNH QUYỀN ADMIN DUY NHẤT TẠI ĐÂY
+      if (email === 'admin@linkgold.pro') {
+        profileData.role = UserRole.ADMIN;
+      } else {
+        profileData.role = UserRole.USER;
+      }
+
+      setUser(profileData);
     } catch (err: any) {
       handleGlobalError(err, 'Lỗi tải hồ sơ');
     } finally {
@@ -127,36 +118,6 @@ const App: React.FC = () => {
         <div className="flex flex-col items-center">
            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0095FF]"></div>
            <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl text-center border border-slate-100">
-          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i className="fa-solid fa-triangle-exclamation text-3xl"></i>
-          </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-4">Sự cố kết nối</h2>
-          <p className="text-slate-500 mb-8 leading-relaxed font-medium text-sm">
-            {error}
-          </p>
-          <div className="space-y-3">
-            <button 
-              onClick={() => { setError(null); window.location.reload(); }}
-              className="w-full bg-[#0095FF] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#0077CC] transition-all"
-            >
-              Thử lại ngay
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all"
-            >
-              Về trang đăng nhập
-            </button>
-          </div>
         </div>
       </div>
     );
