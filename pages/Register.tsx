@@ -19,7 +19,6 @@ const Register: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // Tự động lấy mã giới thiệu từ URL nếu có (?ref=abc)
     const params = new URLSearchParams(location.search);
     const ref = params.get('ref');
     if (ref) setFormData(prev => ({ ...prev, refCode: ref }));
@@ -40,7 +39,6 @@ const Register: React.FC = () => {
     }
 
     try {
-      // 1. Kiểm tra mã giới thiệu nếu có
       let referrerId = null;
       if (formData.refCode) {
         const { data: refUser } = await supabase
@@ -54,7 +52,6 @@ const Register: React.FC = () => {
         }
       }
 
-      // 2. Đăng ký tài khoản Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: emailClean,
         password: formData.password,
@@ -64,7 +61,6 @@ const Register: React.FC = () => {
       if (signUpError) throw signUpError;
       
       if (data.user) {
-        // 3. Tạo profile trong bảng profiles kèm referrer_id
         const { error: profileError } = await supabase.from('profiles').insert({
           id: data.user.id,
           username: usernameClean,
@@ -91,7 +87,7 @@ const Register: React.FC = () => {
           <div className="w-10 h-10 bg-[#0095FF] rounded-xl flex items-center justify-center text-white shadow-lg">
             <i className="fa-solid fa-link text-xl"></i>
           </div>
-          <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">{APP_NAME}</span>
+          <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">{APP_NAME}</span>
        </Link>
 
        <div className="w-full max-w-[540px] bg-white rounded-[3rem] shadow-2xl overflow-hidden p-10 md:p-14 border border-slate-100 animate-in fade-in zoom-in duration-500">

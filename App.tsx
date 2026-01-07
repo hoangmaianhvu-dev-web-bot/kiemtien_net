@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -134,7 +135,7 @@ const App: React.FC = () => {
               <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#F8FAFC]">
                 <Routes>
                   <Route path="/" element={<Dashboard user={user} />} />
-                  <Route path="/tasks" element={<Tasks user={user} />} />
+                  <Route path="/tasks" element={<Tasks user={user} setUser={setUser} />} />
                   <Route path="/withdraw" element={<Withdraw user={user} setUser={setUser} />} />
                   <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
                   <Route path="/support" element={<Support />} />

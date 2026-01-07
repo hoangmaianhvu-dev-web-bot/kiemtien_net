@@ -17,27 +17,6 @@ const Login: React.FC<LoginProps> = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [refCodeInput, setRefCodeInput] = useState('');
-  
-  // Real Global Stats
-  const [globalStats, setGlobalStats] = useState({ users: 0, paid: 0 });
-
-  useEffect(() => {
-    const fetchGlobalStats = async () => {
-      try {
-        const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-        const { data: paidData } = await supabase.from('withdrawals').select('amount').eq('status', 'approved');
-        const totalPaid = paidData?.reduce((sum, w) => sum + w.amount, 0) || 0;
-        
-        setGlobalStats({
-          users: usersCount || 0,
-          paid: totalPaid * XU_TO_VND
-        });
-      } catch (e) {
-        console.error("Error fetching landing stats:", e);
-      }
-    };
-    fetchGlobalStats();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +50,7 @@ const Login: React.FC<LoginProps> = () => {
           <div className="w-10 h-10 bg-[#0095FF] rounded-2xl flex items-center justify-center text-white shadow-lg">
             <i className="fa-solid fa-link text-xl"></i>
           </div>
-          <span className="text-2xl font-extrabold tracking-tighter text-slate-900 uppercase italic">{APP_NAME}</span>
+          <span className="text-2xl font-extrabold tracking-tighter text-slate-900 uppercase">{APP_NAME}</span>
         </Link>
         <div className="hidden md:flex items-center space-x-8 font-bold text-slate-500 text-sm">
           <a href="#" className="hover:text-[#0095FF] transition-colors uppercase tracking-widest text-[10px]">Tài liệu</a>
@@ -85,11 +64,12 @@ const Login: React.FC<LoginProps> = () => {
         <main className="max-w-7xl mx-auto px-6 pt-12 md:pt-24 flex flex-col items-center text-center">
           <div className="inline-flex items-center space-x-2 bg-blue-50 text-[#0095FF] px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest mb-8">
             <i className="fa-solid fa-shield-check"></i>
-            <span>Dữ liệu hệ thống thời gian thực</span>
+            <span>Hệ thống kiếm tiền uy tín nhất Việt Nam</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[1.1] mb-8 uppercase italic">
-            KIẾM TIỀN ONLINE <span className="text-gradient">MIỄN PHÍ</span> TẠI NHÀ <br className="hidden md:block"/>
-            RÚT BANK - THẺ GAME <span className="text-gradient">FREE UY TÍN 100%</span>
+          
+          <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[1.0] mb-8 uppercase">
+            KIẾM TIỀN <span className="text-gradient">THẬT</span> <br className="hidden md:block"/>
+            DỄ DÀNG HƠN <span className="text-gradient">BAO GIỜ HẾT.</span>
           </h1>
           
           {/* Referral Entry Box */}
@@ -110,26 +90,25 @@ const Login: React.FC<LoginProps> = () => {
           </div>
 
           <p className="text-lg md:text-xl text-slate-500 max-w-2xl mb-12 font-medium">
-            Rút ngắn khoảng cách thu nhập bằng cách vượt link rút gọn. 
-            Mọi con số bạn thấy đều là thật 100%.
+            Rút ngắn khoảng cách thu nhập bằng cách vượt link rút gọn. Uy tín, minh bạch và thanh toán cực nhanh.
           </p>
 
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 border-t border-slate-100 pt-16 w-full">
             <div>
-              <p className="text-3xl font-black text-slate-900">{globalStats.users.toLocaleString()}</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Thành viên</p>
+              <p className="text-5xl font-black text-slate-900 tracking-tighter">999+</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Thành viên</p>
             </div>
             <div>
-              <p className="text-3xl font-black text-[#0095FF]">{globalStats.paid.toLocaleString()}đ</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Đã thanh toán</p>
+              <p className="text-5xl font-black text-[#0095FF] tracking-tighter">200M+</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Đã thanh toán</p>
             </div>
             <div>
-              <p className="text-3xl font-black text-slate-900">24/7</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Hỗ trợ LIVE</p>
+              <p className="text-5xl font-black text-slate-900 tracking-tighter">24/7</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Hỗ trợ LIVE</p>
             </div>
             <div>
-              <p className="text-3xl font-black text-green-500">REAL</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Số liệu thật</p>
+              <p className="text-5xl font-black text-green-500 tracking-tighter">100%</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Uy tín</p>
             </div>
           </div>
         </main>
@@ -145,8 +124,8 @@ const Login: React.FC<LoginProps> = () => {
             
             <div className="p-10 md:p-14">
               <div className="mb-10">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase italic">{APP_NAME}</h2>
-                <p className="text-slate-500 font-bold text-sm">Đăng nhập vào bảng điều khiển thực tế</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">{APP_NAME}</h2>
+                <p className="text-slate-500 font-bold text-sm">Đăng nhập vào hệ thống kiếm tiền</p>
               </div>
 
               {error && (
