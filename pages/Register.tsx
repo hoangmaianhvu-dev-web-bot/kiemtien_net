@@ -37,7 +37,7 @@ const Register: React.FC = () => {
 
       if (signUpError) throw signUpError;
       if (data.user) {
-        // 2. Create profile entry (usually handled by database triggers, but we do it manually for reliability here)
+        // 2. Create profile entry
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -65,44 +65,72 @@ const Register: React.FC = () => {
             <div className="w-10 h-10 bg-[#0095FF] rounded-lg flex items-center justify-center text-white shadow-lg">
               <i className="fa-solid fa-link text-xl"></i>
             </div>
-            <span className="text-2xl font-black tracking-tighter text-[#1A202C] uppercase italic">{APP_NAME}</span>
+            <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">{APP_NAME}</span>
           </Link>
        </nav>
        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-xl bg-white rounded-[3rem] shadow-2xl overflow-hidden p-10 lg:p-12">
+          <div className="w-full max-w-xl bg-white rounded-[3rem] shadow-2xl overflow-hidden p-10 lg:p-12 border border-slate-100">
               <div className="mb-10 text-center md:text-left">
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Bắt đầu kiếm tiền</h2>
-                <p className="text-slate-500 font-medium">Tham gia cùng cộng đồng LinkGold.</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Bắt đầu kiếm tiền</h2>
+                <p className="text-slate-500 font-medium">Tham gia cùng cộng đồng LinkGold ngay hôm nay.</p>
               </div>
-              {error && <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm rounded-2xl font-bold flex items-center"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
+              {error && <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm rounded-2xl font-bold flex items-center border border-red-100"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-4">
                    <div className="space-y-1">
-                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Username</label>
-                      <input type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold" placeholder="Tên tài khoản..." required />
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Tên tài khoản</label>
+                      <input 
+                        type="text" 
+                        value={formData.username} 
+                        onChange={(e) => setFormData({...formData, username: e.target.value})} 
+                        className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
+                        placeholder="Ví dụ: hoang_kiem_tien" 
+                        required 
+                      />
                    </div>
                    <div className="space-y-1">
-                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Email</label>
-                      <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold" placeholder="example@gmail.com" required />
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Email liên hệ</label>
+                      <input 
+                        type="email" 
+                        value={formData.email} 
+                        onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                        className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
+                        placeholder="example@gmail.com" 
+                        required 
+                      />
                    </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                    <div className="space-y-1">
                       <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Mật khẩu</label>
-                      <input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold" placeholder="********" required />
+                      <input 
+                        type="password" 
+                        value={formData.password} 
+                        onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                        className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
+                        placeholder="********" 
+                        required 
+                      />
                    </div>
                    <div className="space-y-1">
-                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Xác nhận</label>
-                      <input type="password" value={formData.confirm} onChange={(e) => setFormData({...formData, confirm: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold" placeholder="********" required />
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Nhập lại</label>
+                      <input 
+                        type="password" 
+                        value={formData.confirm} 
+                        onChange={(e) => setFormData({...formData, confirm: e.target.value})} 
+                        className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
+                        placeholder="********" 
+                        required 
+                      />
                    </div>
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-xl hover:bg-black transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 mt-4">
-                    {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Đăng ký ngay'}
+                    {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Đăng ký tài khoản'}
                 </button>
               </form>
               <div className="mt-10 text-center">
                 <p className="text-slate-500 font-medium">Đã có tài khoản?</p>
-                <Link to="/login" className="text-[#0095FF] font-black text-lg hover:underline">Đăng nhập tại đây</Link>
+                <Link to="/login" className="text-[#0095FF] font-black text-lg hover:underline tracking-tighter uppercase">Đăng nhập</Link>
               </div>
           </div>
        </div>

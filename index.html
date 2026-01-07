@@ -9,7 +9,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/gold-bars.png">
     
-    <!-- Tailwind CSS v3 (Play CDN) - Bắt buộc dùng v3 để hỗ trợ các class slate, rounded-3xl... -->
+    <!-- Tailwind CSS v3 (Play CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -34,6 +34,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #F8FAFC;
+            color: #1e293b; /* slate-800 */
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
@@ -45,6 +46,18 @@
         .hero-bg {
             background: radial-gradient(circle at 70% 30%, rgba(0, 149, 255, 0.03) 0%, transparent 60%);
         }
+        /* Đảm bảo chữ trong input luôn là màu tối (ngược với nền sáng) */
+        input, textarea, select {
+            color: #0f172a !important; /* Màu đen xanh đậm (slate-900) */
+            background-color: #f8fafc !important; /* slate-50 */
+        }
+        input:focus, textarea:focus {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        input::placeholder {
+            color: #64748b !important; /* slate-500 */
+        }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 6px;
@@ -55,9 +68,6 @@
         ::-webkit-scrollbar-thumb {
           background: #cbd5e1;
           border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
         }
     </style>
 
