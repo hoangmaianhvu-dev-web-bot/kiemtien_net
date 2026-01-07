@@ -18,8 +18,9 @@
             colors: {
               primary: '#0095FF',
             },
-            animation: {
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            borderRadius: {
+              '4xl': '2rem',
+              '5xl': '2.5rem',
             }
           }
         }
@@ -28,46 +29,48 @@
 
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F8FAFC;
-            color: #1e293b; /* slate-800 */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FFFFFF;
+            color: #0F172A;
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
         }
         .text-gradient {
-            background: linear-gradient(90deg, #0095FF 0%, #00D1FF 100%);
+            background: linear-gradient(135deg, #0095FF 0%, #00D1FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .hero-bg {
-            background: radial-gradient(circle at 70% 30%, rgba(0, 149, 255, 0.03) 0%, transparent 60%);
-        }
-        /* Đảm bảo chữ trong input luôn là màu tối (ngược với nền sáng) */
+        /* Đảm bảo chữ trong input luôn tương phản cực cao (ngược màu nền sáng) */
         input, textarea, select {
-            color: #0f172a !important; /* Màu đen xanh đậm (slate-900) */
-            background-color: #f8fafc !important; /* slate-50 */
-        }
-        input:focus, textarea:focus {
-            background-color: #ffffff !important;
-            color: #000000 !important;
+            color: #0F172A !important; 
+            background-color: #F8FAFC !important;
+            caret-color: #0095FF;
         }
         input::placeholder {
-            color: #64748b !important; /* slate-500 */
+            color: #94A3B8 !important;
+        }
+        input:focus {
+            background-color: #FFFFFF !important;
+            border-color: #0095FF !important;
+            box-shadow: 0 0 0 4px rgba(0, 149, 255, 0.1) !important;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
         ::-webkit-scrollbar-track {
-          background: #f1f5f9;
+          background: #F1F5F9;
         }
         ::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
+          background: #CBD5E1;
           border-radius: 10px;
+        }
+        .hero-mesh {
+            background-image: radial-gradient(at 100% 0%, rgba(0, 149, 255, 0.05) 0px, transparent 50%),
+                              radial-gradient(at 0% 100%, rgba(0, 209, 255, 0.05) 0px, transparent 50%);
         }
     </style>
 
@@ -86,7 +89,7 @@
 }
 </script>
 </head>
-<body>
+<body class="hero-mesh">
     <div id="root"></div>
 </body>
 </html>
