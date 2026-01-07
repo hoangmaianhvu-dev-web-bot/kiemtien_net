@@ -22,9 +22,16 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Kiểm tra kết nối Supabase
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          // Nếu có lỗi session (thường do API Key sai/hết hạn)
+          if (sessionError.status === 401 || sessionError.message.includes('Invalid API key')) {
+            throw new Error('API Key Supabase đã bị vô hiệu hóa hoặc không chính xác. Vui lòng cập nhật lại khóa mới trong supabase.ts.');
+          }
+          throw sessionError;
+        }
 
         if (session) {
           await fetchProfile(session.user.id);
@@ -32,8 +39,8 @@ const App: React.FC = () => {
           setLoading(false);
         }
       } catch (err: any) {
-        console.error('Initial session check failed:', err);
-        setError('Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại cấu hình Supabase của bạn.');
+        console.error('Connection Error:', err);
+        setError(err.message || 'Không thể kết nối tới cơ sở dữ liệu. Vui lòng kiểm tra lại cấu hình Supabase.');
         setLoading(false);
       }
     };
@@ -64,17 +71,16 @@ const App: React.FC = () => {
       
       if (data) {
         const profile = data as UserProfile;
-        // Kiểm tra ID Admin đặc biệt
+        // Kiểm tra ID Admin đặc biệt: 0337117930
         if (profile.username === '0337117930' || profile.id === '0337117930') {
           profile.role = UserRole.ADMIN;
         }
         setUser(profile);
       }
     } catch (err: any) {
-      console.error('Error fetching profile:', err);
-      // If error is 401/403, key is likely invalid
-      if (err.code === '401' || err.status === 401) {
-        setError('Thông tin xác thực Supabase đã hết hạn hoặc không hợp lệ (Key bị Revoke).');
+      console.error('Profile fetch failed:', err);
+      if (err.status === 401) {
+        setError('Phiên đăng nhập không hợp lệ hoặc API Key đã bị thay đổi.');
       }
     } finally {
       setLoading(false);
@@ -91,7 +97,7 @@ const App: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center">
            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0095FF]"></div>
-           <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Đang khởi tạo hệ thống...</p>
+           <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Đang kiểm tra kết nối...</p>
         </div>
       </div>
     );
@@ -104,7 +110,7 @@ const App: React.FC = () => {
           <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <i className="fa-solid fa-triangle-exclamation text-3xl"></i>
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-4">Lỗi Kết Nối</h2>
+          <h2 className="text-2xl font-black text-slate-800 mb-4">Lỗi Hệ Thống</h2>
           <p className="text-slate-500 mb-8 leading-relaxed font-medium">
             {error}
           </p>
@@ -112,8 +118,9 @@ const App: React.FC = () => {
             onClick={() => window.location.reload()}
             className="w-full bg-[#0095FF] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#0077CC] transition-all"
           >
-            Thử lại
+            Tải lại trang
           </button>
+          <p className="mt-4 text-xs text-slate-400">Nếu lỗi vẫn tiếp diễn, hãy kiểm tra lại Service Role Key trong file supabase.ts</p>
         </div>
       </div>
     );

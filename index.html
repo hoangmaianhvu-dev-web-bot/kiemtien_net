@@ -5,13 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkGold - Kiếm Tiền Online</title>
-    <!-- Favicon Fix -->
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/gold-bars.png">
     
-    <!-- Tailwind CSS with config to suppress warnings -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Sửa lỗi Favicon 404 bằng cách cung cấp link trực tiếp -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/gold-bars.png">
+    <link rel="shortcut icon" href="https://img.icons8.com/fluency/48/gold-bars.png">
+    
+    <!-- Tailwind CSS Play CDN - Cấu hình tối ưu -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
     <script>
-      tailwind.config = {
+      window.tailwind.config = {
         theme: {
           extend: {
             colors: {
@@ -60,14 +62,16 @@
             background: radial-gradient(circle at 70% 30%, rgba(0, 149, 255, 0.05) 0%, transparent 50%);
         }
     </style>
+
 <script type="importmap">
 {
   "imports": {
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.1.1",
-    "react-dom/client": "https://esm.sh/react-dom@^19.0.0/client",
-    "react": "https://esm.sh/react@^19.0.0",
-    "recharts": "https://esm.sh/recharts@^2.15.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.47.10",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@7.1.1?bundle&external=react,react-dom",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.47.10",
+    "recharts": "https://esm.sh/recharts@2.15.0?bundle&external=react,react-dom",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
   }
