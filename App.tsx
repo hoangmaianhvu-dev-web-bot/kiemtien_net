@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -32,8 +31,7 @@ const App: React.FC = () => {
           setLoading(false);
         }
       } catch (err: any) {
-        console.error('Connection Error:', err);
-        setError(err.message || 'Không thể kết nối tới hệ thống.');
+        handleGlobalError(err, 'Lỗi hệ thống');
         setLoading(false);
       }
     };
@@ -52,18 +50,38 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleGlobalError = (err: any, context: string) => {
+    console.error(`${context}:`, err);
+    let msg = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+    
+    if (typeof err === 'string') {
+      msg = err;
+    } else if (err && typeof err === 'object') {
+      // Ưu tiên trích xuất thông điệp dễ đọc
+      msg = err.message || err.error_description || err.error || (err.toString && err.toString() !== '[object Object]' ? err.toString() : JSON.stringify(err));
+    }
+
+    if (msg.includes('Failed to fetch') || msg.includes('network')) {
+      setError('Mất kết nối Internet. Vui lòng kiểm tra lại đường truyền của bạn.');
+    } else if (msg.includes('JWT') || msg.includes('session')) {
+      setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      handleLogout();
+    } else {
+      setError(`${context}: ${msg}`);
+    }
+  };
+
   const fetchProfile = async (userId: string, email?: string) => {
     try {
-      // Thử lấy profile hiện có
       const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (profileError && profileError.code === 'PGRST116') {
-        // Nếu chưa có profile (lỗi không tìm thấy dòng), tạo mới profile mặc định
-        console.log('Profile not found, creating default...');
+      if (profileError) throw profileError;
+
+      if (!data) {
         const username = email ? email.split('@')[0] : 'User_' + userId.slice(0, 5);
         
         const { data: newProfile, error: createError } = await supabase
@@ -71,39 +89,36 @@ const App: React.FC = () => {
           .insert({
             id: userId,
             username: username,
-            role: 'USER'
+            role: 'USER',
+            xu_balance: 0
           })
           .select()
           .single();
 
         if (createError) throw createError;
         setUser(newProfile as UserProfile);
-      } else if (profileError) {
-        throw profileError;
       } else {
         const profile = data as UserProfile;
-        // Kiểm tra quyền Admin dựa trên username hoặc ID đặc biệt
         if (profile.username === '0337117930' || profile.id === '0337117930') {
           profile.role = UserRole.ADMIN;
         }
         setUser(profile);
       }
     } catch (err: any) {
-      console.error('Profile handling failed:', err);
-      // Nếu lỗi do schema (thiếu cột xu_balance), vẫn cho user vào nhưng hiển thị cảnh báo
-      if (err.message && err.message.includes('xu_balance')) {
-        setError("Lỗi cơ sở dữ liệu: Thiếu cột 'xu_balance' trong bảng profiles. Vui lòng kiểm tra lại cấu hình Supabase.");
-      } else {
-        setError('Phiên đăng nhập gặp sự cố. Vui lòng tải lại trang.');
-      }
+      handleGlobalError(err, 'Lỗi tải hồ sơ');
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setUser(null);
+    setLoading(false);
   };
 
   if (loading) {
@@ -111,7 +126,7 @@ const App: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center">
            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0095FF]"></div>
-           <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Đang tải dữ liệu...</p>
+           <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -120,26 +135,26 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-xl text-center border border-red-100">
+        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl text-center border border-slate-100">
           <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <i className="fa-solid fa-triangle-exclamation text-3xl"></i>
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-4">Thông báo</h2>
-          <p className="text-slate-500 mb-8 leading-relaxed font-medium">
+          <h2 className="text-2xl font-black text-slate-800 mb-4">Sự cố kết nối</h2>
+          <p className="text-slate-500 mb-8 leading-relaxed font-medium text-sm">
             {error}
           </p>
           <div className="space-y-3">
             <button 
-              onClick={() => window.location.reload()}
+              onClick={() => { setError(null); window.location.reload(); }}
               className="w-full bg-[#0095FF] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#0077CC] transition-all"
             >
-              Thử lại
+              Thử lại ngay
             </button>
             <button 
               onClick={handleLogout}
               className="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all"
             >
-              Đăng xuất
+              Về trang đăng nhập
             </button>
           </div>
         </div>

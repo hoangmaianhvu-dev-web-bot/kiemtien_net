@@ -1,13 +1,9 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-/**
- * CẢNH BÁO BẢO MẬT:
- * Hãy sử dụng 'anon' key (Public Key) từ Supabase Dashboard cho môi trường Client.
- * Nếu bị báo 'Key Leaked', bạn cần thu hồi key cũ và tạo key mới trong Supabase.
- */
-
+// URL và Key được cấu hình từ dự án Supabase
 const supabaseUrl = 'https://olenmrbbnacuhrmmxeas.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sZW5tcmJibmFjdWhybW14ZWFzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Nzc3Mzg4MSwiZXhwIjoyMDgzMzQ5ODgxfQ.ikjFptrkbJhx9r9lVELtWU6x1RrSAqXp0xNOdlox7qY';
+
+// Sử dụng Anon Key để truy cập các bảng công khai
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sZW5tcmJibmFjdWhybW14ZWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3NzM4ODEsImV4cCI6MjA4MzM0OTg4MX0.PijCMjyho9A0H8GX1MeGNhFBZbQqxxWOmjjpdrpEcwY';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
