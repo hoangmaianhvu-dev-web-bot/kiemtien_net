@@ -1,6 +1,7 @@
 
 export const APP_NAME = "LinkGold";
 export const XU_TO_VND = 1; // 1 Xu = 1 VND
+export const REFERRAL_COMMISSION = 0.05; // 5% hoa hồng cho người giới thiệu
 
 export const SOCIAL_LINKS = {
   ZALO: "https://zalo.me/g/example",

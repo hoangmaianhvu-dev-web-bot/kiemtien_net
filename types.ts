@@ -11,6 +11,8 @@ export interface UserProfile {
   role: UserRole;
   avatar_url?: string;
   created_at: string;
+  referrer_id?: string; // ID của người giới thiệu
+  referral_earned?: number; // Tổng xu đã kiếm từ bạn bè
 }
 
 export interface ShortLinkTask {
@@ -20,6 +22,14 @@ export interface ShortLinkTask {
   url: string;
   description: string;
   status: 'active' | 'inactive';
+}
+
+export interface TaskRequest {
+  id: string;
+  user_id: string;
+  task_id: string;
+  status: 'pending' | 'completed';
+  created_at: string;
 }
 
 export interface WithdrawalRequest {

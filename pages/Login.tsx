@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserProfile } from '../types';
 import { APP_NAME, XU_TO_VND } from '../constants';
 import { supabase } from '../supabase';
@@ -10,11 +10,13 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = () => {
+  const navigate = useNavigate();
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [refCodeInput, setRefCodeInput] = useState('');
   
   // Real Global Stats
   const [globalStats, setGlobalStats] = useState({ users: 0, paid: 0 });
@@ -48,17 +50,17 @@ const Login: React.FC<LoginProps> = () => {
         password,
       });
 
-      if (loginError) {
-        if (loginError.message.includes('Email not confirmed')) {
-          throw new Error('Bạn chưa xác nhận Email. Vui lòng kiểm tra hộp thư Gmail.');
-        }
-        throw loginError;
-      }
+      if (loginError) throw loginError;
     } catch (err: any) {
       setError(err.message || 'Tài khoản hoặc mật khẩu không đúng.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleJoinWithRef = () => {
+    const target = refCodeInput ? `/register?ref=${refCodeInput}` : '/register';
+    navigate(target);
   };
 
   return (
@@ -89,24 +91,29 @@ const Login: React.FC<LoginProps> = () => {
             KIẾM TIỀN ONLINE <span className="text-gradient">MIỄN PHÍ</span> TẠI NHÀ <br className="hidden md:block"/>
             RÚT BANK - THẺ GAME <span className="text-gradient">FREE UY TÍN 100%</span>
           </h1>
+          
+          {/* Referral Entry Box */}
+          <div className="w-full max-w-xl bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row gap-2 mb-12 shadow-sm">
+            <input 
+              type="text" 
+              placeholder="Nhập mã giới thiệu (nếu có)..." 
+              value={refCodeInput}
+              onChange={(e) => setRefCodeInput(e.target.value)}
+              className="flex-1 bg-transparent px-6 py-4 outline-none font-bold text-slate-700"
+            />
+            <button 
+              onClick={handleJoinWithRef}
+              className="bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
+            >
+              Bắt đầu kiếm tiền
+            </button>
+          </div>
+
           <p className="text-lg md:text-xl text-slate-500 max-w-2xl mb-12 font-medium">
             Rút ngắn khoảng cách thu nhập bằng cách vượt link rút gọn. 
             Mọi con số bạn thấy đều là thật 100%.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <button 
-              onClick={() => setShowLoginForm(true)}
-              className="flex-1 bg-[#0095FF] text-white py-5 rounded-3xl font-extrabold text-xl shadow-2xl shadow-blue-100 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
-            >
-              Vào kiếm tiền
-            </button>
-            <Link 
-              to="/register" 
-              className="flex-1 bg-white border-2 border-slate-100 text-slate-700 py-5 rounded-3xl font-extrabold text-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
-            >
-              Tham gia ngay
-            </Link>
-          </div>
+
           <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
             <div>
               <p className="text-3xl font-black text-slate-900">{globalStats.users.toLocaleString()}</p>
