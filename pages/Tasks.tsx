@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { UserProfile, ShortLinkTask } from '../types';
 import { supabase } from '../supabase';
@@ -23,10 +24,10 @@ const Tasks: React.FC<TasksProps> = ({ user }) => {
     setError(null);
     setLoading(true);
     try {
+      // Đã loại bỏ .eq('status', 'active') để tránh lỗi thiếu cột trong DB
       const { data, error: supabaseError } = await supabase
         .from('tasks')
-        .select('*')
-        .eq('status', 'active');
+        .select('*');
       
       if (supabaseError) throw supabaseError;
       setTasks(data || []);
