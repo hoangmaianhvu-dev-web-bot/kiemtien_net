@@ -1,0 +1,8 @@
+{
+  "name": "LinkGold - Kiếm Tiền Online Uy Tín",
+  "description": "Nền tảng kiếm tiền online hiện đại thông qua nhiệm vụ vượt link rút gọn. Giao diện chuyên nghiệp, rút tiền nhanh chóng qua Ngân hàng và thẻ Garena.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
