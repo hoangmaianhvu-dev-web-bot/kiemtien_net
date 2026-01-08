@@ -11,17 +11,22 @@ export interface UserProfile {
   role: UserRole;
   avatar_url?: string;
   created_at: string;
-  referrer_id?: string; // ID của người giới thiệu
-  referral_earned?: number; // Tổng xu đã kiếm từ bạn bè
+  referrer_id?: string;
+  referral_earned?: number;
 }
 
 export interface ShortLinkTask {
   id: string;
+  title: string;
   platform: string;
-  reward: number;
+  xu: number; // Đã đổi từ reward sang xu
   url: string;
   description: string;
   status: 'active' | 'inactive';
+  type: 'auto' | 'manual';
+  provider?: string;
+  api_token?: string;
+  manual_link?: string;
 }
 
 export interface TaskRequest {
