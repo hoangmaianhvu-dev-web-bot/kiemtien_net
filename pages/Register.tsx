@@ -14,17 +14,44 @@ const Register: React.FC = () => {
     e.preventDefault();
     if (formData.password !== formData.confirm) { setError('Mật khẩu không khớp!'); return; }
     setLoading(true);
+    setError('');
     
-    const { data, error: signUpError } = await supabase.auth.signUp({ email: formData.email, password: formData.password });
-    if (signUpError) { setError(signUpError.message); setLoading(false); return; }
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({ 
+        email: formData.email, 
+        password: formData.password 
+      });
+      
+      if (signUpError) { 
+        setError(signUpError.message); 
+        setLoading(false); 
+        return; 
+      }
 
-    if (data.user) {
-      // Fix: Changed xu_balance to xu to match the database schema and App.tsx usage
-      await supabase.from('users').insert({ id: data.user.id, username: formData.username, xu: 0, role: 'USER' });
-      alert('Đăng ký thành công! Vui lòng đăng nhập.');
-      navigate('/login');
+      if (data.user) {
+        // Sử dụng role: 'user' (chữ thường) đồng nhất với App.tsx
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({ 
+            id: data.user.id, 
+            username: formData.username, 
+            xu: 0, 
+            role: 'user' 
+          });
+
+        if (insertError) {
+          console.error("Insert user error:", insertError);
+          setError("Không thể tạo thông tin người dùng. Vui lòng liên hệ Admin.");
+        } else {
+          alert('Đăng ký thành công! Vui lòng đăng nhập.');
+          navigate('/login');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || "Đã xảy ra lỗi không xác định.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -56,7 +83,9 @@ const Register: React.FC = () => {
                   <input type="password" value={formData.confirm} onChange={e => setFormData({...formData, confirm: e.target.value})} className="w-full px-8 py-5 bg-slate-50 rounded-3xl outline-none font-bold" required />
                 </div>
              </div>
-             <button disabled={loading} className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs hover:bg-black shadow-xl">Đăng ký ngay</button>
+             <button disabled={loading} className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs hover:bg-black shadow-xl">
+               {loading ? 'Đang xử lý...' : 'Đăng ký ngay'}
+             </button>
           </form>
 
           <div className="text-center pt-6 border-t border-slate-100">
