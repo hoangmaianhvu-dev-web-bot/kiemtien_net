@@ -14,8 +14,8 @@
         theme: {
           extend: {
             colors: { 
-              primary: '#1E40AF', // Blue 800
-              secondary: '#3B82F6', // Blue 500
+              primary: '#1E40AF',
+              secondary: '#3B82F6',
               success: '#10B981',
               danger: '#EF4444'
             },
@@ -38,17 +38,12 @@
             background-color: #F1F5F9;
             color: #1E293B;
             margin: 0;
+            min-height: 100vh;
         }
-        .sidebar-active {
-            background-color: #1E40AF;
-            color: white;
-        }
-        input, textarea, select {
-            border: 1px solid #E2E8F0 !important;
-        }
-        input:focus {
-            border-color: #3B82F6 !important;
-            ring: 2px #3B82F6;
+        #root {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
     </style>
 
@@ -58,11 +53,10 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react-router-dom": "https://esm.sh/react-router-dom@7.1.1?bundle&external=react,react-dom",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.28.0?bundle&external=react,react-dom",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.47.10",
-    "recharts": "https://esm.sh/recharts@2.15.0?bundle&external=react,react-dom",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>

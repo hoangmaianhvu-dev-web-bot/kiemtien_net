@@ -23,35 +23,42 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (session?.user) {
           await fetchProfile(session.user.id, session.user.email);
         } else {
           setLoading(false);
         }
       } catch (err) {
-        console.error('Init app error:', err);
+        console.error('Lỗi khởi tạo App:', err);
         setLoading(false);
       }
     };
+
     initApp();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
+      if (session?.user) {
         await fetchProfile(session.user.id, session.user.email);
       } else {
         setUser(null);
         setLoading(false);
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string, email?: string) => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, username, xu, role')
+        .select('*')
         .eq('id', userId)
         .maybeSingle();
 
@@ -63,35 +70,49 @@ const App: React.FC = () => {
         const username = email ? email.split('@')[0] : 'User_' + userId.slice(0, 5);
         const { data: newProfile, error: createError } = await supabase
           .from('users')
-          .insert({ id: userId, username, role: 'user', xu: 0 })
-          .select('id, username, xu, role')
+          .insert({ 
+            id: userId, 
+            username, 
+            role: 'user', 
+            xu: 0 
+          })
+          .select('*')
           .single();
+          
         if (createError) throw createError;
         profileData = newProfile as UserProfile;
       } else {
         profileData = data as UserProfile;
       }
 
+      // Kiểm tra quyền Admin
       if (profileData.username === '0337117930' || email === 'admin@linkgold.pro') {
         profileData.role = 'admin';
       }
 
       setUser(profileData);
     } catch (err) {
-      console.error('Fetch profile error:', err);
+      console.error('Lỗi fetch profile:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (err) {
+      console.error('Lỗi đăng xuất:', err);
+    }
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    <div className="flex items-center justify-center min-h-screen bg-[#F1F5F9]">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Đang tải hệ thống...</p>
+      </div>
     </div>
   );
 
@@ -103,7 +124,7 @@ const App: React.FC = () => {
             <Sidebar user={user} onLogout={handleLogout} />
             <div className="flex-1 flex flex-col overflow-hidden">
               <Navbar user={user} />
-              <main className="flex-1 overflow-y-auto p-4 md:p-6">
+              <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#F8FAFC]">
                 <Routes>
                   <Route path="/" element={<Dashboard user={user} />} />
                   <Route path="/tasks" element={<Tasks user={user} setUser={setUser} />} />
@@ -113,7 +134,7 @@ const App: React.FC = () => {
                   <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
                   <Route path="/support" element={<Support />} />
                   {user.role === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
-                  <Route path="*" element={<Navigate to="/" />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </main>
             </div>
@@ -122,7 +143,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/login" element={<Login onLogin={() => {}} />} />
             <Route path="/register" element={<Register />} />
-            <Route path="*" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         )}
       </div>
