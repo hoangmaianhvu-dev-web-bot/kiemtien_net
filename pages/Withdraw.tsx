@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { UserProfile, WithdrawalRequest } from '../types';
 import { WITHDRAW_METHODS, XU_TO_VND } from '../constants';
@@ -39,7 +40,8 @@ const Withdraw: React.FC<WithdrawProps> = ({ user, setUser }) => {
       return;
     }
 
-    if (withdrawAmount > user.xu_balance) {
+    // Fix: Changed xu_balance to xu to match UserProfile type definition
+    if (withdrawAmount > user.xu) {
       setMessage({ type: 'error', text: 'Số dư không đủ để thực hiện giao dịch.' });
       return;
     }
@@ -59,8 +61,9 @@ const Withdraw: React.FC<WithdrawProps> = ({ user, setUser }) => {
 
       if (withdrawError) throw withdrawError;
       
-      const newBalance = user.xu_balance - withdrawAmount;
-      setUser({ ...user, xu_balance: newBalance });
+      // Fix: Changed xu_balance to xu to match UserProfile type definition
+      const newBalance = user.xu - withdrawAmount;
+      setUser({ ...user, xu: newBalance });
       
       setMessage({ type: 'success', text: 'Yêu cầu rút tiền thành công! Vui lòng chờ hệ thống xử lý trong vòng 24h.' });
       setAmount('');
@@ -89,8 +92,10 @@ const Withdraw: React.FC<WithdrawProps> = ({ user, setUser }) => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
             <p className="text-slate-400 mb-2 font-black uppercase tracking-widest text-[10px]">Số dư khả dụng</p>
-            <h3 className="text-4xl font-black text-[#0095FF] mb-1">{user.xu_balance.toLocaleString()}</h3>
-            <p className="text-sm font-bold text-slate-400 tracking-tight">Xu (≈ {(user.xu_balance * XU_TO_VND).toLocaleString()}đ)</p>
+            {/* Fix: Changed xu_balance to xu to match UserProfile type definition */}
+            <h3 className="text-4xl font-black text-[#0095FF] mb-1">{user.xu.toLocaleString()}</h3>
+            {/* Fix: Changed xu_balance to xu to match UserProfile type definition */}
+            <p className="text-sm font-bold text-slate-400 tracking-tight">Xu (≈ {(user.xu * XU_TO_VND).toLocaleString()}đ)</p>
           </div>
           
           <div className="bg-slate-900 p-6 rounded-[2rem] text-white">

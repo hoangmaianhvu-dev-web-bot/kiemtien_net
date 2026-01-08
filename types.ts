@@ -1,14 +1,14 @@
 
 export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN'
+  USER = 'user',
+  ADMIN = 'admin'
 }
 
 export interface UserProfile {
   id: string;
   username: string;
-  xu_balance: number;
-  role: UserRole;
+  xu: number; // Đổi từ xu_balance sang xu theo yêu cầu DB
+  role: string;
   avatar_url?: string;
   created_at: string;
   referrer_id?: string;
@@ -19,7 +19,7 @@ export interface ShortLinkTask {
   id: string;
   title: string;
   platform: string;
-  xu: number; // Đã đổi từ reward sang xu
+  xu: number; 
   url: string;
   description: string;
   status: 'active' | 'inactive';
@@ -43,15 +43,6 @@ export interface WithdrawalRequest {
   amount: number;
   method: 'BANK' | 'GARENA';
   details: string;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-}
-
-export interface TaskSubmission {
-  id: string;
-  user_id: string;
-  task_id: string;
-  verification_code: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }

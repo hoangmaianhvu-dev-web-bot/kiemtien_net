@@ -1,190 +1,127 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { UserProfile } from '../types';
-import { APP_NAME, XU_TO_VND } from '../constants';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { APP_NAME } from '../constants';
 import { supabase } from '../supabase';
 
-interface LoginProps {
-  onLogin: (user: UserProfile) => void;
-}
-
-const Login: React.FC<LoginProps> = () => {
-  const navigate = useNavigate();
-  const [showLoginForm, setShowLoginForm] = useState(false);
+const Login: React.FC<{onLogin: any}> = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [refCodeInput, setRefCodeInput] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    try {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (loginError) throw loginError;
-    } catch (err: any) {
-      setError(err.message || 'Tài khoản hoặc mật khẩu không đúng.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleJoinWithRef = () => {
-    const target = refCodeInput ? `/register?ref=${refCodeInput}` : '/register';
-    navigate(target);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) setError('Email hoặc mật khẩu không chính xác!');
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-[#0095FF] rounded-2xl flex items-center justify-center text-white shadow-lg">
-            <i className="fa-solid fa-link text-xl"></i>
-          </div>
-          <span className="text-2xl font-extrabold tracking-tighter text-slate-900 uppercase">{APP_NAME}</span>
-        </Link>
-        <div className="hidden md:flex items-center space-x-8 font-bold text-slate-500 text-sm">
-          <a href="#" className="hover:text-[#0095FF] transition-colors uppercase tracking-widest text-[10px]">Tài liệu</a>
-          <a href="#" className="hover:text-[#0095FF] transition-colors uppercase tracking-widest text-[10px]">Cộng đồng</a>
-          <button onClick={() => setShowLoginForm(true)} className="text-[#0095FF] font-black uppercase tracking-widest text-[10px]">Đăng nhập</button>
-          <Link to="/register" className="bg-slate-900 text-white px-6 py-2.5 rounded-xl hover:bg-black transition-all font-black uppercase tracking-widest text-[10px]">Đăng ký</Link>
+    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      {/* DINOS STYLE HEADER */}
+      <header className="w-full h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 lg:px-20 z-20">
+        <div className="flex items-center space-x-2">
+           <div className="w-10 h-10 bg-[#0095FF] rounded-xl flex items-center justify-center text-white font-black text-xl">L</div>
+           <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">{APP_NAME}</h1>
         </div>
-      </nav>
+        
+        <nav className="hidden lg:flex items-center space-x-10 text-[13px] font-bold uppercase tracking-widest text-slate-500">
+          <a href="#" className="hover:text-[#0095FF] transition-colors">Công ty <i className="fa-solid fa-chevron-down text-[10px] ml-1"></i></a>
+          <a href="#" className="hover:text-[#0095FF] transition-colors">Giải pháp</a>
+          <a href="#" className="hover:text-[#0095FF] transition-colors">Đối tác <i className="fa-solid fa-chevron-down text-[10px] ml-1"></i></a>
+          <a href="#" className="hover:text-[#0095FF] transition-colors">Kiến thức</a>
+          <a href="#" className="hover:text-[#0095FF] transition-colors">Liên hệ</a>
+        </nav>
 
-      {!showLoginForm ? (
-        <main className="max-w-7xl mx-auto px-6 pt-12 md:pt-24 flex flex-col items-center text-center">
-          <div className="inline-flex items-center space-x-2 bg-blue-50 text-[#0095FF] px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest mb-8">
-            <i className="fa-solid fa-shield-check"></i>
-            <span>Hệ thống kiếm tiền uy tín nhất Việt Nam</span>
+        <div className="flex items-center space-x-4">
+          <button className="bg-[#0095FF] text-white px-8 py-3 rounded-xl font-bold uppercase text-[12px] tracking-widest shadow-lg shadow-blue-100 hover:bg-[#0077CC] transition-all">
+            Đăng nhập/ Đăng ký
+          </button>
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200">
+            <img src="https://flagcdn.com/vn.svg" alt="VN" className="w-full h-full object-cover" />
           </div>
-          
-          <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[1.0] mb-8 uppercase">
-            KIẾM TIỀN <span className="text-gradient">THẬT</span> <br className="hidden md:block"/>
-            DỄ DÀNG HƠN <span className="text-gradient">BAO GIỜ HẾT.</span>
-          </h1>
-          
-          {/* Referral Entry Box */}
-          <div className="w-full max-w-xl bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row gap-2 mb-12 shadow-sm">
-            <input 
-              type="text" 
-              placeholder="Nhập mã giới thiệu (nếu có)..." 
-              value={refCodeInput}
-              onChange={(e) => setRefCodeInput(e.target.value)}
-              className="flex-1 bg-transparent px-6 py-4 outline-none font-bold text-slate-700"
-            />
-            <button 
-              onClick={handleJoinWithRef}
-              className="bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
-            >
-              Bắt đầu kiếm tiền
-            </button>
-          </div>
+        </div>
+      </header>
 
-          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mb-12 font-medium">
-            Rút ngắn khoảng cách thu nhập bằng cách vượt link rút gọn. Uy tín, minh bạch và thanh toán cực nhanh.
+      {/* HERO SECTION */}
+      <div className="flex-1 flex flex-col items-center justify-center py-16 bg-blue-50/20 relative">
+        <div className="z-10 text-center max-w-4xl px-6 mb-12">
+          <p className="text-[14px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">Danh mục</p>
+          <h2 className="text-6xl lg:text-7xl font-black text-[#0095FF] tracking-tighter uppercase mb-6">
+            KIẾM TIỀN ONLINE
+          </h2>
+          <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto opacity-80">
+            Khám phá các cách kiếm tiền online trực tuyến và bí quyết thành công trong thế giới MMO.
           </p>
+        </div>
 
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 border-t border-slate-100 pt-16 w-full">
-            <div>
-              <p className="text-5xl font-black text-slate-900 tracking-tighter">999+</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Thành viên</p>
-            </div>
-            <div>
-              <p className="text-5xl font-black text-[#0095FF] tracking-tighter">200M+</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Đã thanh toán</p>
-            </div>
-            <div>
-              <p className="text-5xl font-black text-slate-900 tracking-tighter">24/7</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Hỗ trợ LIVE</p>
-            </div>
-            <div>
-              <p className="text-5xl font-black text-green-500 tracking-tighter">100%</p>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Uy tín</p>
-            </div>
+        {/* LOGIN BOX */}
+        <div className="z-10 w-full max-w-md bg-white p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,149,255,0.08)] border border-slate-50">
+          <div className="mb-10 text-center">
+            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Đăng nhập ngay</h3>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-2">Truy cập để bắt đầu nhiệm vụ</p>
           </div>
-        </main>
-      ) : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white md:bg-slate-900/40 md:backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-[480px] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-100 animate-in zoom-in-95 duration-300">
-            <button 
-              onClick={() => setShowLoginForm(false)} 
-              className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all"
-            >
-              <i className="fa-solid fa-xmark text-xl"></i>
-            </button>
-            
-            <div className="p-10 md:p-14">
-              <div className="mb-10">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">{APP_NAME}</h2>
-                <p className="text-slate-500 font-bold text-sm">Đăng nhập vào hệ thống kiếm tiền</p>
-              </div>
 
-              {error && (
-                <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-xs flex items-center border border-red-100">
-                  <i className="fa-solid fa-circle-exclamation mr-3 text-sm"></i>
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Email của bạn</label>
-                  <div className="relative group">
-                    <i className="fa-solid fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#0095FF] transition-colors"></i>
-                    <input 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
-                      placeholder="tenban@gmail.com" 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center ml-1">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Mật khẩu</label>
-                  </div>
-                  <div className="relative group">
-                    <i className="fa-solid fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#0095FF] transition-colors"></i>
-                    <input 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] focus:bg-white focus:border-[#0095FF] outline-none transition-all font-bold text-slate-900" 
-                      placeholder="********" 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="w-full bg-[#0095FF] text-white py-5 rounded-[1.5rem] font-black text-xl shadow-xl shadow-blue-100 hover:bg-[#0077CC] active:scale-[0.98] transition-all disabled:opacity-50 mt-4 uppercase tracking-widest"
-                >
-                  {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Bắt đầu ngay'}
-                </button>
-              </form>
-
-              <div className="mt-12 pt-8 border-t border-slate-100 text-center">
-                <p className="text-slate-500 font-bold text-xs mb-4 uppercase tracking-widest">Lần đầu tham gia?</p>
-                <Link to="/register" className="inline-block px-10 py-3 bg-slate-100 text-slate-900 rounded-full font-black text-[10px] hover:bg-slate-200 transition-all uppercase tracking-widest">Tạo tài khoản mới</Link>
-              </div>
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl font-bold text-xs border border-red-100 mb-6">
+              {error}
             </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email của bạn</label>
+              <input 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-[#0095FF] transition-all font-bold" 
+                placeholder="name@gmail.com" 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Mật khẩu bảo mật</label>
+              <input 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-[#0095FF] transition-all font-bold" 
+                placeholder="********" 
+                required 
+              />
+            </div>
+            
+            <button 
+              disabled={loading} 
+              className="w-full bg-[#0095FF] text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[13px] shadow-xl shadow-blue-100 hover:bg-black transition-all active:scale-95"
+            >
+              {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Đăng nhập hệ thống'}
+            </button>
+          </form>
+
+          <div className="pt-8 mt-8 border-t border-slate-50 text-center">
+            <Link to="/register" className="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#0095FF] transition-colors">
+              Chưa có tài khoản? <span className="text-[#0095FF]">Đăng ký ngay</span>
+            </Link>
           </div>
         </div>
-      )}
+
+        {/* Mẫu trang trí phụ */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-20 filter grayscale">
+           <i className="fa-brands fa-google text-4xl"></i>
+           <i className="fa-brands fa-facebook text-4xl"></i>
+           <i className="fa-brands fa-shopify text-4xl"></i>
+           <i className="fa-brands fa-amazon text-4xl"></i>
+        </div>
+      </div>
+
+      <footer className="py-8 bg-white text-center border-t border-slate-50">
+        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.5em]">© 2026 {APP_NAME.toUpperCase()} - WEBSITE KIẾM TIỀN UY TÍN</p>
+      </footer>
     </div>
   );
 };

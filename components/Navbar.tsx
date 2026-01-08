@@ -8,22 +8,22 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ user }) => {
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
+    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
       <div className="flex items-center space-x-2">
-        <h2 className="text-xl font-bold text-slate-800 hidden md:block">
-          Chào mừng, <span className="text-indigo-600">{user.username}</span>
+        <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest hidden md:block">
+          Chào mừng, <span className="text-[#0095FF]">{user.username}</span>
         </h2>
       </div>
 
       <div className="flex items-center space-x-4">
-        <div className="flex items-center bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">
-          <i className="fa-solid fa-coins text-yellow-500 mr-2"></i>
-          <span className="font-bold text-indigo-700">{user.xu_balance.toLocaleString()} Xu</span>
+        <div className="flex items-center bg-blue-50 px-5 py-2 rounded-full border border-blue-100 shadow-inner">
+          <i className="fa-solid fa-coins text-yellow-400 mr-2 shadow-sm"></i>
+          <span className="font-black text-[#0095FF] text-sm">{(user.xu || 0).toLocaleString()} XU</span>
         </div>
         
         <div className="relative group">
-          <button className="flex items-center space-x-2 p-1 rounded-full hover:bg-slate-100 transition-colors">
-            <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+          <button className="flex items-center space-x-2 p-1 rounded-full hover:bg-slate-50 transition-colors">
+            <div className="w-10 h-10 bg-[#0095FF] rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-200">
               {user.username.charAt(0).toUpperCase()}
             </div>
           </button>

@@ -61,7 +61,8 @@ const Profile: React.FC<ProfileProps> = ({ user, setUser }) => {
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
             <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Số dư hiện tại</p>
-              <p className="text-xl font-black text-[#0095FF]">{user.xu_balance.toLocaleString()} Xu</p>
+              {/* Fix: Changed xu_balance to xu to match UserProfile type definition */}
+              <p className="text-xl font-black text-[#0095FF]">{user.xu.toLocaleString()} Xu</p>
             </div>
             <div className="bg-green-50 px-6 py-3 rounded-2xl border border-green-100">
               <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">Hoa hồng giới thiệu</p>

@@ -11,118 +11,94 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import Support from './pages/Support';
-import { UserProfile, UserRole } from './types';
+import { UserProfile } from './types';
 import { supabase } from './supabase';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const initApp = async () => {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        if (session) {
-          await fetchProfile(session.user.id, session.user.email);
-        } else {
-          setLoading(false);
-        }
-      } catch (err: any) {
-        handleGlobalError(err, 'Lỗi hệ thống');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await fetchProfile(session.user.id, session.user.email);
+      } else {
         setLoading(false);
       }
     };
-
     initApp();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchProfile(session.user.id, session.user.email);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
+      if (session) fetchProfile(session.user.id, session.user.email);
+      else { setUser(null); setLoading(false); }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleGlobalError = (err: any, context: string) => {
-    console.error(`${context}:`, err);
-    let msg = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
-    if (err?.message) msg = err.message;
-    setError(msg);
-  };
-
   const fetchProfile = async (userId: string, email?: string) => {
     try {
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
+      // 1. Lấy đúng các cột: id, username, xu, role
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, xu, role')
         .eq('id', userId)
         .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       let profileData: UserProfile;
 
+      // 2. Nếu không tìm thấy, tự động tạo mới role 'user' [cite: 2025-12-30]
       if (!data) {
         const username = email ? email.split('@')[0] : 'User_' + userId.slice(0, 5);
         const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            username: username,
-            role: 'USER',
-            xu_balance: 0
+          .from('users')
+          .insert({ 
+            id: userId, 
+            username: username, 
+            role: 'user', 
+            xu: 0 
           })
-          .select()
+          .select('id, username, xu, role')
           .single();
-
         if (createError) throw createError;
         profileData = newProfile as UserProfile;
       } else {
         profileData = data as UserProfile;
       }
 
-      // CHỈ ĐỊNH QUYỀN ADMIN DUY NHẤT TẠI ĐÂY
-      if (email === 'admin@linkgold.pro') {
-        profileData.role = UserRole.ADMIN;
-      } else {
-        profileData.role = UserRole.USER;
+      // 3. ĐẶC QUYỀN ADMIN [cite: 2026-01-08]
+      if (
+        profileData.id === '0337117930' || 
+        profileData.username === '0337117930' || 
+        email === 'admin@linkgold.pro'
+      ) {
+        profileData.role = 'admin';
+        // Cập nhật role vào DB nếu cần
+        if (data && data.role !== 'admin') {
+          await supabase.from('users').update({ role: 'admin' }).eq('id', userId);
+        }
       }
 
       setUser(profileData);
-    } catch (err: any) {
-      handleGlobalError(err, 'Lỗi tải hồ sơ');
+    } catch (err) {
+      console.error('Fetch profile error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Logout error:', err);
-    }
+    await supabase.auth.signOut();
     setUser(null);
-    setLoading(false);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0095FF]"></div>
-           <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#0095FF]"></div>
+    </div>
+  );
 
   return (
     <HashRouter>
@@ -139,9 +115,7 @@ const App: React.FC = () => {
                   <Route path="/withdraw" element={<Withdraw user={user} setUser={setUser} />} />
                   <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
                   <Route path="/support" element={<Support />} />
-                  {user.role === UserRole.ADMIN && (
-                    <Route path="/admin" element={<AdminDashboard />} />
-                  )}
+                  {user.role === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </main>

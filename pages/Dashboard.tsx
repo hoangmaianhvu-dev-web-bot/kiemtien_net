@@ -1,176 +1,127 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { UserProfile } from '../types';
-import { SOCIAL_LINKS, XU_TO_VND } from '../constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '../supabase';
 
 interface DashboardProps {
   user: UserProfile;
 }
 
-interface UserStats {
-  tasksCompleted: number;
-  totalWithdrawn: number;
-  systemUsers: number;
-}
-
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  const [stats, setStats] = useState<UserStats>({
-    tasksCompleted: 0,
-    totalWithdrawn: 0,
-    systemUsers: 0
-  });
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [stats, setStats] = useState({ completed: 0, withdrawn: 0, totalUsers: 0 });
   const [loading, setLoading] = useState(true);
+  const [rewardMsg, setRewardMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRealStats = async () => {
-      setLoading(true);
-      try {
-        const { count: tasksCount } = await supabase
-          .from('submissions')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'approved');
+    // Logic BOT TỰ ĐỘNG CỘNG TIỀN [cite: 2025-12-30]
+    const checkReward = async () => {
+      if (searchParams.get('status') === 'success') {
+        const pendingXu = localStorage.getItem('waiting_xu');
+        if (pendingXu && user) {
+          try {
+            // Gọi RPC increment_xu để cộng tiền trực tiếp vào DB
+            const { error } = await supabase.rpc('increment_xu', { 
+              user_id: user.id, 
+              amount: parseInt(pendingXu) 
+            });
 
-        const { data: withdrawData } = await supabase
-          .from('withdrawals')
-          .select('amount')
-          .eq('user_id', user.id)
-          .eq('status', 'approved');
-        
-        const totalWithdrawn = withdrawData?.reduce((sum, w) => sum + w.amount, 0) || 0;
-
-        const { count: usersCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
-
-        setStats({
-          tasksCompleted: tasksCount || 0,
-          totalWithdrawn: totalWithdrawn,
-          systemUsers: usersCount || 0
-        });
-
-        const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const dateStr = d.toISOString().split('T')[0];
-          
-          const { count } = await supabase
-            .from('submissions')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('status', 'approved')
-            .gte('created_at', `${dateStr}T00:00:00`)
-            .lte('created_at', `${dateStr}T23:59:59`);
-          
-          last7Days.push({
-            name: days[d.getDay()],
-            amount: (count || 0) * 500
-          });
+            if (!error) {
+              setRewardMsg(`✅ Bot đã tự cộng ${pendingXu} Xu thành công!`);
+              localStorage.removeItem('waiting_xu');
+              
+              // Reset URL sạch [cite: 2026-01-08]
+              const timer = setTimeout(() => {
+                setSearchParams({});
+                setRewardMsg(null);
+              }, 3000);
+              return () => clearTimeout(timer);
+            } else {
+              console.error("RPC Error:", error);
+            }
+          } catch (err) {
+            console.error("Reward check error:", err);
+          }
         }
-        setChartData(last7Days);
-
-      } catch (err) {
-        console.error("Error stats:", err);
-      } finally {
-        setLoading(false);
       }
     };
+    
+    checkReward();
+  }, [searchParams, user, setSearchParams]);
 
-    fetchRealStats();
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { count: tasks } = await supabase.from('submissions').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'approved');
+      const { data: withdraws } = await supabase.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'approved');
+      const { count: usersCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
+      
+      setStats({
+        completed: tasks || 0,
+        withdrawn: withdraws?.reduce((a, b) => a + b.amount, 0) || 0,
+        totalUsers: usersCount || 0
+      });
+      setLoading(false);
+    };
+    fetchStats();
   }, [user.id]);
 
-  const displayStats = [
-    { label: 'Số dư hiện tại', value: `${user.xu_balance.toLocaleString()} Xu`, icon: 'fa-wallet', color: 'bg-green-500' },
-    { label: 'Nhiệm vụ hoàn tất', value: stats.tasksCompleted.toString(), icon: 'fa-check-circle', color: 'bg-indigo-500' },
-    { label: 'Tổng tiền đã rút', value: `${(stats.totalWithdrawn * XU_TO_VND).toLocaleString()}đ`, icon: 'fa-money-bill-wave', color: 'bg-orange-500' },
-    { label: 'Thành viên hệ thống', value: stats.systemUsers.toLocaleString(), icon: 'fa-users', color: 'bg-blue-500' },
+  const cards = [
+    { label: 'SỐ DƯ HIỆN TẠI', value: `${(user.xu || 0).toLocaleString()} XU`, icon: 'fa-wallet', color: 'bg-blue-500' },
+    { label: 'NHIỆM VỤ ĐÃ XONG', value: stats.completed, icon: 'fa-check-double', color: 'bg-green-500' },
+    { label: 'TIỀN ĐÃ RÚT', value: `${stats.withdrawn.toLocaleString()} XU`, icon: 'fa-money-bill-transfer', color: 'bg-orange-500' },
+    { label: 'THÀNH VIÊN', value: stats.totalUsers, icon: 'fa-users', color: 'bg-indigo-500' },
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl overflow-hidden relative">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      {rewardMsg && (
+        <div className="bg-[#0095FF] text-white p-6 rounded-2xl font-black text-center shadow-2xl animate-bounce border-4 border-white">
+          {rewardMsg}
+        </div>
+      )}
+
+      <div className="bg-gradient-to-br from-[#0095FF] to-[#0055BB] rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2 uppercase tracking-tight">Chào mừng trở lại, {user.username}!</h2>
-          <p className="text-indigo-100 text-lg opacity-90">Hệ thống đang vận hành tự động 100%.</p>
-          <div className="mt-6 flex space-x-3">
-            <a href="#/tasks" className="bg-white text-indigo-600 px-6 py-2.5 rounded-full font-black hover:bg-indigo-50 transition-all uppercase text-xs">
-              Làm nhiệm vụ ngay
-            </a>
+          <h2 className="text-4xl font-black mb-2 uppercase tracking-tight">XIN CHÀO, {user.username}!</h2>
+          <p className="text-blue-100 font-bold uppercase tracking-widest text-[10px]">Hệ thống cộng tiền tự động 100% • Admin: 0337117930</p>
+          <div className="mt-10 flex space-x-4">
+            <a href="#/tasks" className="bg-white text-[#0095FF] px-8 py-3 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:scale-105 transition-all shadow-xl">Bắt đầu kiếm tiền</a>
           </div>
         </div>
-        <i className="fa-solid fa-coins absolute top-0 right-0 p-8 text-9xl opacity-20"></i>
+        <i className="fa-solid fa-bolt-lightning absolute bottom-[-50px] right-[-30px] text-[20rem] opacity-10 pointer-events-none"></i>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {displayStats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4 transition-all hover:scale-[1.02]">
-            <div className={`${stat.color} p-3 rounded-xl text-white`}>
-              <i className={`fa-solid ${stat.icon} text-xl w-6 text-center`}></i>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {cards.map((card, i) => (
+          <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-50 shadow-sm hover:shadow-xl transition-all">
+            <div className={`${card.color} w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg`}>
+              <i className={`fa-solid ${card.icon} text-xl`}></i>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{stat.label}</p>
-              <h3 className="text-xl font-black text-slate-800">{loading ? '...' : stat.value}</h3>
-            </div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{card.label}</p>
+            <h3 className="text-2xl font-black text-slate-900">{loading ? '...' : card.value}</h3>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Hiệu suất kiếm tiền</h3>
-              <p className="text-xs text-slate-400 font-bold">Thống kê thực tế 7 ngày gần nhất</p>
-            </div>
-            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full uppercase tracking-widest">Live Update</span>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 'bold', fontSize: 12}} />
-                <YAxis hide />
-                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: 'bold'}} />
-                <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 6 ? '#4f46e5' : '#cbd5e1'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
+           <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter mb-8">Danh mục kiếm tiền</h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-blue-200 transition-colors">
+                 <h4 className="font-black text-slate-800 uppercase text-sm mb-4">Hướng dẫn Publisher</h4>
+                 <p className="text-xs text-slate-500 font-medium leading-relaxed">Cung cấp tài liệu và kiến thức chuyên sâu để bạn tối ưu hóa thu nhập từ LinkGold.</p>
+              </div>
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-blue-200 transition-colors">
+                 <h4 className="font-black text-slate-800 uppercase text-sm mb-4">Chiến dịch HOT</h4>
+                 <p className="text-xs text-slate-500 font-medium leading-relaxed">Luôn cập nhật các link rút gọn có giá trị cao nhất thị trường 2026.</p>
+              </div>
+           </div>
         </div>
-
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Cộng đồng</h3>
-          <div className="space-y-3">
-            <a href={SOCIAL_LINKS.ZALO} target="_blank" rel="noopener noreferrer" className="flex items-center p-4 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all">
-              <i className="fa-solid fa-comment-dots text-2xl w-10"></i>
-              <div className="flex-1 ml-2">
-                <p className="font-black text-sm uppercase">Nhóm Zalo</p>
-                <p className="text-[10px] font-bold opacity-60 uppercase">Thảo luận & Giao lưu</p>
-              </div>
-            </a>
-            <a href={SOCIAL_LINKS.TELEGRAM} target="_blank" rel="noopener noreferrer" className="flex items-center p-4 rounded-2xl bg-sky-50 text-sky-700 hover:bg-sky-100 transition-all">
-              <i className="fa-brands fa-telegram text-2xl w-10"></i>
-              <div className="flex-1 ml-2">
-                <p className="font-black text-sm uppercase">Kênh Telegram</p>
-                <p className="text-[10px] font-bold opacity-60 uppercase">Thông báo từ Admin</p>
-              </div>
-            </a>
-            <a href={SOCIAL_LINKS.YOUTUBE} target="_blank" rel="noopener noreferrer" className="flex items-center p-4 rounded-2xl bg-red-50 text-red-700 hover:bg-red-100 transition-all">
-              <i className="fa-brands fa-youtube text-2xl w-10"></i>
-              <div className="flex-1 ml-2">
-                <p className="font-black text-sm uppercase">Kênh YouTube</p>
-                <p className="text-[10px] font-bold opacity-60 uppercase">Hướng dẫn vượt link</p>
-              </div>
-            </a>
-          </div>
+        <div className="bg-slate-900 p-10 rounded-[3rem] text-white flex flex-col justify-center text-center">
+           <i className="fa-solid fa-shield-halved text-5xl text-blue-400 mb-6"></i>
+           <h4 className="text-xl font-black uppercase tracking-tight mb-4">Uy tín tuyệt đối</h4>
+           <p className="text-xs font-medium opacity-60 leading-relaxed tracking-wider">Hệ thống của Admin 0337117930 cam kết thanh toán đúng hạn, hỗ trợ 24/7.</p>
         </div>
       </div>
     </div>
